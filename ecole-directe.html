@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EspaceÉlève — Portail scolaire</title>
+<style>
+  :root{
+    --blue:#1d5fa8; --blue-dark:#144279; --blue-light:#e8f0fa; --blue-accent:#2a7ed6;
+    --gray:#f4f6fa; --text:#222; --muted:#6b7280; --border:#d9e2ec;
+    --success:#1f9d55; --warn:#e3a008; --danger:#c53030;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Segoe UI",Tahoma,Arial,sans-serif;background:var(--gray);color:var(--text);min-height:100vh}
+
+  /* LOGIN */
+  .login-wrapper{min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,var(--blue) 0%,var(--blue-accent) 100%);padding:20px}
+  .login-card{background:#fff;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,.2);
+    width:100%;max-width:440px;padding:40px 35px;text-align:center}
+  .logo{font-size:28px;font-weight:700;color:var(--blue);margin-bottom:6px;letter-spacing:-.5px}
+  .logo span{color:var(--blue-accent)}
+  .login-sub{color:var(--muted);font-size:14px;margin-bottom:24px}
+  .form-group{text-align:left;margin-bottom:16px}
+  .form-group label{display:block;font-size:13px;font-weight:600;color:#333;margin-bottom:6px}
+  .form-group input,.form-group select,.form-group textarea{width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:6px;
+    font-size:14px;transition:border .2s;outline:none;font-family:inherit}
+  .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--blue)}
+  .btn{background:var(--blue);color:#fff;border:none;padding:12px 20px;border-radius:6px;
+    font-size:15px;font-weight:600;cursor:pointer;transition:background .2s}
+  .btn:hover{background:var(--blue-dark)}
+  .btn.w-full{width:100%}
+  .btn-secondary{background:#fff;color:var(--blue);border:1px solid var(--blue)}
+  .btn-secondary:hover{background:var(--blue-light)}
+  .btn-danger{background:var(--danger)}
+  .btn-danger:hover{background:#9b2424}
+  .btn-sm{padding:7px 12px;font-size:12px}
+  .login-footer{margin-top:18px;font-size:12px;color:var(--muted)}
+  .login-footer a{color:var(--blue);text-decoration:none;cursor:pointer}
+  .error{color:var(--danger);font-size:13px;margin-top:8px;min-height:18px}
+
+  /* APP */
+  .app{display:none;min-height:100vh}
+  .app.active{display:block}
+  .topbar{background:#fff;border-bottom:1px solid var(--border);padding:0 24px;
+    display:flex;align-items:center;justify-content:space-between;height:60px;
+    position:sticky;top:0;z-index:10;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+  .topbar .logo{font-size:22px;margin:0}
+  .role-tag{background:var(--blue-light);color:var(--blue);font-size:11px;
+    padding:3px 9px;border-radius:10px;font-weight:700;margin-left:10px;text-transform:uppercase}
+  .role-tag.staff{background:#fde2e2;color:var(--danger)}
+  .role-tag.parent{background:#e6f0ff;color:#1a4aa0}
+  .topbar-right{display:flex;align-items:center;gap:18px}
+  .bell{position:relative;cursor:pointer;font-size:18px;color:var(--muted)}
+  .bell-count{position:absolute;top:-6px;right:-8px;background:var(--danger);
+    color:#fff;font-size:10px;font-weight:700;border-radius:10px;padding:1px 5px;min-width:16px;text-align:center;display:none}
+  .bell-count.show{display:block}
+  .user-chip{display:flex;align-items:center;gap:10px}
+  .avatar{width:36px;height:36px;border-radius:50%;background:var(--blue);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
+  .user-name{font-size:14px;font-weight:600}
+  .user-name small{display:block;font-weight:400;color:var(--muted);font-size:11px}
+  .logout{background:none;border:1px solid var(--border);padding:6px 12px;border-radius:5px;
+    font-size:12px;cursor:pointer;color:var(--muted)}
+  .logout:hover{background:#f9fafb}
+
+  .layout{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 60px)}
+  .sidebar{background:#fff;border-right:1px solid var(--border);padding:20px 0}
+  .nav-item{padding:11px 22px;font-size:14px;color:#333;cursor:pointer;display:flex;
+    align-items:center;gap:12px;border-left:3px solid transparent;transition:all .15s;justify-content:space-between}
+  .nav-item:hover{background:var(--blue-light)}
+  .nav-item.active{background:var(--blue-light);color:var(--blue);
+    border-left-color:var(--blue);font-weight:600}
+  .nav-left{display:flex;align-items:center;gap:12px}
+  .nav-icon{width:20px;text-align:center}
+  .nav-badge{background:var(--danger);color:#fff;font-size:10px;font-weight:700;
+    border-radius:10px;padding:1px 6px;margin-right:10px}
+  .nav-section{padding:14px 22px 6px;font-size:11px;text-transform:uppercase;
+    color:var(--muted);font-weight:700;letter-spacing:.5px}
+
+  .main{padding:26px 32px;overflow-y:auto}
+  .page-title{font-size:22px;font-weight:700;color:#1a2b45;margin-bottom:4px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .page-sub{color:var(--muted);font-size:13px;margin-bottom:22px}
+
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px}
+  .stat-card{background:#fff;border-radius:8px;padding:18px;border:1px solid var(--border);
+    display:flex;align-items:center;gap:14px}
+  .stat-icon{width:46px;height:46px;border-radius:10px;background:var(--blue-light);
+    color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:22px}
+  .stat-icon.red{background:#fde2e2;color:var(--danger)}
+  .stat-icon.green{background:#d4f4dd;color:var(--success)}
+  .stat-icon.orange{background:#feebcb;color:#b7791f}
+  .stat-num{font-size:22px;font-weight:700;color:#1a2b45}
+  .stat-label{font-size:12px;color:var(--muted)}
+
+  .grid-2{display:grid;grid-template-columns:2fr 1fr;gap:20px}
+  @media(max-width:900px){.grid-2{grid-template-columns:1fr}}
+
+  .panel{background:#fff;border-radius:8px;border:1px solid var(--border);overflow:hidden;margin-bottom:20px}
+  .panel-header{padding:14px 18px;border-bottom:1px solid var(--border);
+    display:flex;justify-content:space-between;align-items:center;background:#fafbfd;gap:10px;flex-wrap:wrap}
+  .panel-title{font-size:14px;font-weight:700;color:#1a2b45}
+  .panel-body{padding:16px 18px}
+  .panel-link{color:var(--blue);font-size:12px;text-decoration:none;font-weight:600;cursor:pointer;background:none;border:none}
+  .panel-link:hover{text-decoration:underline}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{text-align:left;padding:10px 14px;background:#f4f7fb;color:#4a5568;
+    font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.3px}
+  td{padding:12px 14px;border-top:1px solid var(--border)}
+  tr:hover td{background:#fafbfd}
+  .t-actions{text-align:right}
+  .icon-btn{background:none;border:none;cursor:pointer;color:var(--muted);font-size:15px;padding:4px 6px;border-radius:4px}
+  .icon-btn:hover{background:#f1f4f8;color:var(--danger)}
+
+  .note{display:inline-block;padding:4px 10px;border-radius:14px;font-weight:700;font-size:13px}
+  .note-good{background:#d4f4dd;color:var(--success)}
+  .note-avg{background:#fff3cd;color:var(--warn)}
+  .note-bad{background:#fde2e2;color:var(--danger)}
+
+  .item-list{list-style:none}
+  .item-list li{list-style:none;padding:12px 0;border-top:1px solid var(--border);
+    display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .item-list li:first-child{border-top:none}
+  .item-title{font-weight:600;font-size:13.5px;color:#1a2b45}
+  .item-sub{font-size:12px;color:var(--muted);margin-top:2px}
+  .badge{font-size:11px;padding:3px 9px;border-radius:10px;font-weight:600;white-space:nowrap}
+  .badge-blue{background:var(--blue-light);color:var(--blue)}
+  .badge-orange{background:#feebcb;color:#b7791f}
+  .badge-green{background:#d4f4dd;color:var(--success)}
+  .badge-red{background:#fde2e2;color:var(--danger)}
+
+  /* Schedule */
+  .schedule{display:grid;grid-template-columns:70px repeat(5,1fr);gap:4px;font-size:12px}
+  .sch-head{background:var(--blue);color:#fff;padding:8px;text-align:center;font-weight:600;border-radius:4px}
+  .sch-time{padding:8px;text-align:center;color:var(--muted);font-size:11px;font-weight:600}
+  .sch-cell{background:#fff;border:1px solid var(--border);padding:4px;min-height:60px;border-radius:4px;position:relative}
+  .sch-course{background:var(--blue-light);border-left:3px solid var(--blue);padding:6px 8px;
+    border-radius:3px;font-size:11.5px;position:relative}
+  .sch-course b{display:block;color:var(--blue-dark);margin-bottom:2px}
+  .sch-course span{color:var(--muted);font-size:10.5px}
+  .sch-course .del{position:absolute;top:2px;right:4px;cursor:pointer;color:var(--muted);font-size:13px;line-height:1}
+  .sch-course .del:hover{color:var(--danger)}
+
+  /* Modal */
+  .modal-bg{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,25,45,.55);
+    z-index:100;align-items:center;justify-content:center;padding:20px}
+  .modal-bg.active{display:flex}
+  .modal{background:#fff;border-radius:10px;width:100%;max-width:520px;padding:26px 28px;box-shadow:0 25px 60px rgba(0,0,0,.3);max-height:90vh;overflow-y:auto}
+  .modal h3{font-size:18px;color:#1a2b45;margin-bottom:6px}
+  .modal p.sub{color:var(--muted);font-size:13px;margin-bottom:18px}
+  .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
+
+  .empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:13.5px}
+
+  .toast{position:fixed;bottom:20px;right:20px;background:#1a2b45;color:#fff;padding:12px 20px;
+    border-radius:6px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.25);
+    opacity:0;transform:translateY(12px);transition:all .25s;pointer-events:none;z-index:200}
+  .toast.show{opacity:1;transform:translateY(0)}
+
+  .linked-box{background:var(--blue-light);border:1px solid var(--blue);border-radius:6px;padding:10px 14px;
+    font-size:12.5px;color:var(--blue-dark);margin-bottom:16px;display:flex;align-items:center;gap:10px}
+
+  /* Messaging */
+  .msg-layout{display:grid;grid-template-columns:340px 1fr;gap:0;background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;min-height:560px}
+  @media(max-width:800px){.msg-layout{grid-template-columns:1fr}}
+  .msg-left{border-right:1px solid var(--border);display:flex;flex-direction:column}
+  .msg-toolbar{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;background:#fafbfd}
+  .msg-list{flex:1;overflow-y:auto;max-height:560px}
+  .msg-item{padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+  .msg-item:hover{background:var(--blue-light)}
+  .msg-item.active{background:var(--blue-light)}
+  .msg-item.unread{border-left:3px solid var(--blue);background:#f0f7ff}
+  .msg-top{display:flex;justify-content:space-between;margin-bottom:3px}
+  .msg-from{font-weight:700;font-size:13px;color:#1a2b45}
+  .msg-from.unread{color:var(--blue)}
+  .msg-date{font-size:11px;color:var(--muted)}
+  .msg-subj{font-size:12.5px;color:#333;margin-bottom:2px;font-weight:500}
+  .msg-prev{font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .msg-right{padding:20px 24px;overflow-y:auto}
+  .msg-view-head{border-bottom:1px solid var(--border);padding-bottom:14px;margin-bottom:16px}
+  .msg-view-subj{font-size:18px;font-weight:700;color:#1a2b45;margin-bottom:6px}
+  .msg-view-meta{font-size:12px;color:var(--muted)}
+  .msg-view-body{font-size:14px;line-height:1.6;white-space:pre-wrap;color:#333}
+</style>
+</head>
+<body>
+
+<!-- LOGIN PAGE -->
+<div class="login-wrapper" id="loginPage">
+  <div class="login-card">
+    <div class="logo">Espace<span>Élève</span></div>
+    <p class="login-sub">Portail scolaire — Collège &amp; Lycée</p>
+
+    <form onsubmit="return doLogin(event)" autocomplete="off">
+      <div class="form-group">
+        <label>Identifiant</label>
+        <input type="text" id="loginUser" autocomplete="off" required>
+      </div>
+      <div class="form-group">
+        <label>Mot de passe</label>
+        <input type="password" id="loginPass" autocomplete="new-password" required>
+      </div>
+      <button type="submit" class="btn w-full">Se connecter</button>
+      <div class="error" id="loginError"></div>
+    </form>
+
+    <p class="login-footer">
+      <a>Identifiant oublié ?</a> · <a>Mot de passe oublié ?</a>
+    </p>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="appPage">
+
+  <div class="topbar">
+    <div class="logo">Espace<span>Élève</span> <span class="role-tag" id="roleTag">Élève</span></div>
+    <div class="topbar-right">
+      <div class="bell" title="Notifications">🔔<span class="bell-count" id="bellCount">0</span></div>
+      <div class="user-chip">
+        <div class="avatar" id="avatar">KT</div>
+        <div class="user-name" id="userName">—<small id="userSub">—</small></div>
+      </div>
+      <button class="logout" onclick="doLogout()">Déconnexion</button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+    <main class="main" id="mainContent"></main>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===================== USERS ===================== */
+const USERS = {
+  'kalen.t':   {pwd:'Kal2014',    name:'Kalen T.',   role:'staff',   roleLabel:'Professeur',   sub:'Professeur principal — M. Tang', avatar:'KT'},
+  'kim.t':     {pwd:'Kim2015',    name:'Kim T.',     role:'student', roleLabel:'Élève',        sub:'Classe de 4ème B — 2025/2026',   avatar:'KI'},
+  'vanessa.t': {pwd:'VanyTang84', name:'Vanessa T.', role:'parent',  roleLabel:'Parent',       sub:'Responsable légal de Kim T.',    avatar:'VT'}
+};
+const STUDENT_ID = 'kim.t';
+const STAFF_ID   = 'kalen.t';
+const PARENT_ID  = 'vanessa.t';
+const STORE_KEY  = 'espaceeleve_data_v2';
+
+const DEFAULT_DATA = {
+  grades: [
+    {id:uid(),student:STUDENT_ID,subject:'Mathématiques',title:'Contrôle — Équations',date:'2026-04-10',note:14,out:20,coef:2,teacher:'M. Tang'},
+    {id:uid(),student:STUDENT_ID,subject:'Français',title:'Rédaction',date:'2026-04-08',note:12,out:20,coef:2,teacher:'M. Tang'},
+    {id:uid(),student:STUDENT_ID,subject:'Anglais',title:'Oral',date:'2026-04-05',note:17,out:20,coef:1,teacher:'M. Tang'},
+    {id:uid(),student:STUDENT_ID,subject:'Histoire',title:'Interrogation',date:'2026-04-02',note:15,out:20,coef:1,teacher:'M. Tang'}
+  ],
+  sanctions:[
+    {id:uid(),student:STUDENT_ID,date:'2026-03-18',type:'Avertissement',reason:'Bavardages répétés en cours',staff:'Kalen T.',status:'Notifiée'}
+  ],
+  schedule:[
+    {id:uid(),student:STUDENT_ID,day:0,slot:'08h-09h',subject:'Maths',room:'204',teacher:'M. Tang'},
+    {id:uid(),student:STUDENT_ID,day:0,slot:'09h-10h',subject:'Maths',room:'204',teacher:'M. Tang'},
+    {id:uid(),student:STUDENT_ID,day:0,slot:'10h-11h',subject:'Anglais',room:'101',teacher:'M. Tang'},
+    {id:uid(),student:STUDENT_ID,day:1,slot:'08h-09h',subject:'Histoire',room:'212',teacher:'M. Tang'},
+    {id:uid(),student:STUDENT_ID,day:1,slot:'09h-10h',subject:'SVT',room:'Labo 3',teacher:'M. Tang'},
+    {id:uid(),student:STUDENT_ID,day:2,slot:'08h-09h',subject:'Physique',room:'Labo 2',teacher:'M. Tang'},
+    {id:uid(),student:STUDENT_ID,day:3,slot:'10h-11h',subject:'Maths',room:'204',teacher:'M. Tang'},
+    {id:uid(),student:STUDENT_ID,day:4,slot:'09h-10h',subject:'Français',room:'110',teacher:'M. Tang'}
+  ],
+  homework:[
+    {id:uid(),student:STUDENT_ID,subject:'Maths',due:'2026-04-15',desc:'Exercices p. 142 à 145'},
+    {id:uid(),student:STUDENT_ID,subject:'Français',due:'2026-04-17',desc:'Lecture chapitre 5 + résumé'}
+  ],
+  messages:[
+    {id:uid(),from:STAFF_ID,to:[PARENT_ID],subject:'Bienvenue sur le portail',body:'Bonjour Mme Tang,\n\nBienvenue sur le portail scolaire. Vous pourrez y suivre le travail de Kim et me contacter à tout moment.\n\nCordialement,\nM. Tang',date:new Date().toISOString(),read:{}}
+  ]
+};
+
+const DAYS = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi'];
+const SLOTS = ['08h-09h','09h-10h','10h-11h','11h-12h','14h-15h','15h-16h','16h-17h'];
+
+/* ===================== STORAGE ===================== */
+function loadData(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(!raw){ saveData(DEFAULT_DATA); return JSON.parse(JSON.stringify(DEFAULT_DATA)); }
+    const d = JSON.parse(raw);
+    if(!d.messages) d.messages = [];
+    return d;
+  }catch(e){ return JSON.parse(JSON.stringify(DEFAULT_DATA)); }
+}
+function saveData(d){ localStorage.setItem(STORE_KEY, JSON.stringify(d)); }
+function uid(){ return 'id_'+Math.random().toString(36).slice(2,10); }
+
+let DATA = loadData();
+let currentUser = null;
+let selectedMsgId = null;
+
+/* ===================== AUTH ===================== */
+function doLogin(e){
+  e.preventDefault();
+  const u = document.getElementById('loginUser').value.trim().toLowerCase();
+  const p = document.getElementById('loginPass').value;
+  const err = document.getElementById('loginError');
+  const user = USERS[u];
+  if(!user || user.pwd !== p){ err.textContent = 'Identifiant ou mot de passe incorrect.'; return false; }
+  err.textContent = '';
+  currentUser = {...user, id:u};
+  document.getElementById('loginPage').style.display='none';
+  document.getElementById('appPage').classList.add('active');
+  mountApp();
+  return false;
+}
+function doLogout(){
+  currentUser = null; selectedMsgId = null;
+  document.getElementById('appPage').classList.remove('active');
+  document.getElementById('loginPage').style.display='flex';
+  document.getElementById('loginUser').value='';
+  document.getElementById('loginPass').value='';
+  document.getElementById('loginError').textContent='';
+}
+
+/* ===================== MOUNT APP ===================== */
+function mountApp(){
+  const tag = document.getElementById('roleTag');
+  tag.textContent = currentUser.roleLabel;
+  tag.className = 'role-tag '+(currentUser.role==='staff'?'staff':(currentUser.role==='parent'?'parent':''));
+  document.getElementById('avatar').textContent = currentUser.avatar;
+  document.getElementById('userName').innerHTML = currentUser.name + '<small>'+currentUser.sub+'</small>';
+
+  const sb = document.getElementById('sidebar');
+  if(currentUser.role==='staff'){
+    sb.innerHTML = `
+      <div class="nav-section">Professeur</div>
+      <div class="nav-item active" data-page="staffHome"><div class="nav-left"><span class="nav-icon">🏠</span>Accueil</div></div>
+      <div class="nav-item" data-page="staffStudent"><div class="nav-left"><span class="nav-icon">👤</span>Fiche élève</div></div>
+      <div class="nav-item" data-page="staffGrades"><div class="nav-left"><span class="nav-icon">📊</span>Notes</div></div>
+      <div class="nav-item" data-page="staffSchedule"><div class="nav-left"><span class="nav-icon">📅</span>Emploi du temps</div></div>
+      <div class="nav-item" data-page="staffHomework"><div class="nav-left"><span class="nav-icon">📚</span>Devoirs</div></div>
+      <div class="nav-item" data-page="staffSanctions"><div class="nav-left"><span class="nav-icon">⚠️</span>Sanctions</div></div>
+      <div class="nav-section">Communication</div>
+      <div class="nav-item" data-page="messages"><div class="nav-left"><span class="nav-icon">✉️</span>Messagerie</div><span class="nav-badge" id="navMsgBadge"></span></div>
+    `;
+  } else if(currentUser.role==='parent'){
+    sb.innerHTML = `
+      <div class="nav-section">Parent</div>
+      <div class="nav-item active" data-page="parentHome"><div class="nav-left"><span class="nav-icon">🏠</span>Accueil</div></div>
+      <div class="nav-item" data-page="parentGrades"><div class="nav-left"><span class="nav-icon">📊</span>Notes de Kim</div></div>
+      <div class="nav-item" data-page="parentSchedule"><div class="nav-left"><span class="nav-icon">📅</span>Emploi du temps</div></div>
+      <div class="nav-item" data-page="parentHomework"><div class="nav-left"><span class="nav-icon">📚</span>Devoirs</div></div>
+      <div class="nav-item" data-page="parentSanctions"><div class="nav-left"><span class="nav-icon">⚠️</span>Vie scolaire</div></div>
+      <div class="nav-section">Communication</div>
+      <div class="nav-item" data-page="messages"><div class="nav-left"><span class="nav-icon">✉️</span>Messagerie</div><span class="nav-badge" id="navMsgBadge"></span></div>
+    `;
+  } else {
+    sb.innerHTML = `
+      <div class="nav-section">Élève</div>
+      <div class="nav-item active" data-page="studentHome"><div class="nav-left"><span class="nav-icon">🏠</span>Accueil</div></div>
+      <div class="nav-item" data-page="studentGrades"><div class="nav-left"><span class="nav-icon">📊</span>Mes notes</div></div>
+      <div class="nav-item" data-page="studentSchedule"><div class="nav-left"><span class="nav-icon">📅</span>Emploi du temps</div></div>
+      <div class="nav-item" data-page="studentHomework"><div class="nav-left"><span class="nav-icon">📚</span>Cahier de textes</div></div>
+      <div class="nav-item" data-page="studentSanctions"><div class="nav-left"><span class="nav-icon">⚠️</span>Vie scolaire</div></div>
+      <div class="nav-section">Communication</div>
+      <div class="nav-item" data-page="messages"><div class="nav-left"><span class="nav-icon">✉️</span>Messagerie</div><span class="nav-badge" id="navMsgBadge"></span></div>
+    `;
+  }
+  sb.querySelectorAll('.nav-item').forEach(n=>{
+    n.addEventListener('click',()=>{
+      sb.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+      n.classList.add('active');
+      render(n.dataset.page);
+    });
+  });
+
+  render(currentUser.role==='staff'?'staffHome':(currentUser.role==='parent'?'parentHome':'studentHome'));
+  updateBell();
+}
+
+/* ===================== RENDER ===================== */
+function render(page){
+  const m = document.getElementById('mainContent');
+  m.scrollTop = 0;
+  const fn = {
+    staffHome:renderStaffHome, staffStudent:renderStaffStudent, staffSanctions:renderStaffSanctions,
+    staffGrades:renderStaffGrades, staffSchedule:renderStaffSchedule, staffHomework:renderStaffHomework,
+    studentHome:renderStudentHome, studentGrades:renderStudentGrades, studentSchedule:renderStudentSchedule,
+    studentHomework:renderStudentHomework, studentSanctions:renderStudentSanctions,
+    parentHome:renderParentHome, parentGrades:renderParentGrades, parentSchedule:renderParentSchedule,
+    parentHomework:renderParentHomework, parentSanctions:renderParentSanctions,
+    messages:renderMessages
+  }[page];
+  m.innerHTML = fn ? fn() : '';
+  bindActions();
+  updateBell();
+}
+
+/* ===================== SHARED HELPERS ===================== */
+function linkedInfo(){
+  return `<div class="linked-box">🔗 Compte lié à <b>Kim T.</b> et <b>Vanessa T.</b> (parent). Toute modification est répercutée immédiatement.</div>`;
+}
+function badgeForSanction(t){
+  const low = (t||'').toLowerCase();
+  if(low.includes('exclusion')||low.includes('blâme')) return 'badge-red';
+  if(low.includes('avertiss')||low.includes('retenue')) return 'badge-orange';
+  return 'badge-blue';
+}
+function tableSanctions(arr, editable){
+  return `<table><thead><tr><th>Date</th><th>Type</th><th>Motif</th><th>Par</th><th>Statut</th>${editable?'<th></th>':''}</tr></thead><tbody>
+    ${arr.map(s=>`<tr>
+      <td>${fmtDate(s.date)}</td>
+      <td><span class="badge ${badgeForSanction(s.type)}">${esc(s.type)}</span></td>
+      <td>${esc(s.reason)}</td><td>${esc(s.staff)}</td><td>${esc(s.status)}</td>
+      ${editable?`<td class="t-actions"><button class="icon-btn" data-del="sanctions" data-id="${s.id}">🗑</button></td>`:''}
+    </tr>`).join('')}
+  </tbody></table>`;
+}
+function tableGrades(arr, editable){
+  return `<table><thead><tr><th>Matière</th><th>Évaluation</th><th>Date</th><th>Note</th><th>Coef.</th><th>Prof.</th>${editable?'<th></th>':''}</tr></thead><tbody>
+    ${arr.map(g=>`<tr>
+      <td><b>${esc(g.subject)}</b></td><td>${esc(g.title)}</td><td>${fmtDate(g.date)}</td>
+      <td><span class="note ${noteClass(g.note,g.out)}">${g.note}/${g.out}</span></td>
+      <td>${g.coef}</td><td>${esc(g.teacher)}</td>
+      ${editable?`<td class="t-actions"><button class="icon-btn" data-del="grades" data-id="${g.id}">🗑</button></td>`:''}
+    </tr>`).join('')}
+  </tbody></table>`;
+}
+function noteClass(n,o){ const p=(n/o)*20; return p>=14?'note-good':p>=10?'note-avg':'note-bad'; }
+function computeAverage(g){
+  if(!g.length) return '—';
+  let tot=0,cf=0;
+  g.forEach(x=>{ tot += (x.note/x.out)*20 * x.coef; cf += x.coef; });
+  return (tot/cf).toFixed(2).replace('.',',');
+}
+function renderScheduleGrid(editable){
+  const sc = DATA.schedule.filter(x=>x.student===STUDENT_ID);
+  let html = '<div class="panel"><div class="panel-body"><div class="schedule">';
+  html += '<div></div>';
+  DAYS.forEach(d=> html += `<div class="sch-head">${d}</div>`);
+  SLOTS.forEach(slot=>{
+    html += `<div class="sch-time">${slot}</div>`;
+    for(let d=0; d<5; d++){
+      const cours = sc.filter(x=>x.day===d && x.slot===slot);
+      html += '<div class="sch-cell">';
+      cours.forEach(c=>{
+        html += `<div class="sch-course"><b>${esc(c.subject)}</b><span>${esc(c.room)} · ${esc(c.teacher)}</span>`;
+        if(editable) html += `<span class="del" data-del="schedule" data-id="${c.id}">✕</span>`;
+        html += `</div>`;
+      });
+      html += '</div>';
+    }
+  });
+  html += '</div></div></div>';
+  return html;
+}
+
+/* ===================== STAFF VIEWS ===================== */
+function renderStaffHome(){
+  const g = DATA.grades.filter(x=>x.student===STUDENT_ID);
+  const s = DATA.sanctions.filter(x=>x.student===STUDENT_ID);
+  return `
+    <h1 class="page-title">Tableau de bord — Professeur</h1>
+    <p class="page-sub">Bienvenue M. Tang. Vous êtes le professeur principal de Kim.</p>
+    ${linkedInfo()}
+    <div class="cards">
+      <div class="stat-card"><div class="stat-icon">📊</div><div><div class="stat-num">${computeAverage(g)}</div><div class="stat-label">Moyenne de Kim</div></div></div>
+      <div class="stat-card"><div class="stat-icon orange">⚠️</div><div><div class="stat-num">${s.length}</div><div class="stat-label">Sanctions</div></div></div>
+      <div class="stat-card"><div class="stat-icon green">📝</div><div><div class="stat-num">${g.length}</div><div class="stat-label">Notes saisies</div></div></div>
+      <div class="stat-card"><div class="stat-icon">📅</div><div><div class="stat-num">${DATA.schedule.filter(x=>x.student===STUDENT_ID).length}</div><div class="stat-label">Cours planifiés</div></div></div>
+    </div>
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">Dernières sanctions</div><button class="panel-link" data-nav="staffSanctions">Gérer →</button></div>
+        ${s.length? tableSanctions(s.slice(-5).reverse(), false) : '<div class="empty">Aucune sanction.</div>'}
+      </div>
+      <div class="panel">
+        <div class="panel-header"><div class="panel-title">Dernières notes</div><button class="panel-link" data-nav="staffGrades">Gérer →</button></div>
+        ${g.length? tableGrades(g.slice(-5).reverse(), false) : '<div class="empty">Aucune note.</div>'}
+      </div>
+    </div>
+  `;
+}
+function renderStaffStudent(){
+  const g = DATA.grades.filter(x=>x.student===STUDENT_ID);
+  const s = DATA.sanctions.filter(x=>x.student===STUDENT_ID);
+  return `
+    <h1 class="page-title">Fiche élève</h1>
+    <div class="panel"><div class="panel-body">
+      <div style="display:grid;grid-template-columns:120px 1fr;gap:16px;align-items:center">
+        <div class="avatar" style="width:100px;height:100px;font-size:36px;border-radius:12px">KI</div>
+        <div>
+          <div style="font-size:20px;font-weight:700;color:#1a2b45">Kim T.</div>
+          <div style="color:var(--muted);font-size:13px;margin-top:4px">Classe de 4ème B — 2025/2026</div>
+          <div style="margin-top:10px;font-size:13px"><b>Identifiant :</b> ${STUDENT_ID}</div>
+          <div style="font-size:13px"><b>Responsable légal :</b> Vanessa T.</div>
+          <div style="font-size:13px"><b>Moyenne :</b> ${computeAverage(g)}/20 — <b>Sanctions :</b> ${s.length}</div>
+        </div>
+      </div>
+    </div></div>
+  `;
+}
+function renderStaffSanctions(){
+  const s = DATA.sanctions.filter(x=>x.student===STUDENT_ID);
+  return `
+    <h1 class="page-title">Sanctions <button class="btn btn-sm" data-modal="addSanction">+ Nouvelle sanction</button></h1>
+    <p class="page-sub">Historique — visible par Kim et Mme Tang.</p>
+    ${linkedInfo()}
+    <div class="panel">
+      ${s.length? tableSanctions(s.slice().reverse(), true) : '<div class="empty">Aucune sanction.</div>'}
+    </div>
+  `;
+}
+function renderStaffGrades(){
+  const g = DATA.grades.filter(x=>x.student===STUDENT_ID);
+  return `
+    <h1 class="page-title">Notes <button class="btn btn-sm" data-modal="addGrade">+ Ajouter une note</button></h1>
+    <p class="page-sub">Moyenne actuelle : <b style="color:var(--blue)">${computeAverage(g)}/20</b></p>
+    ${linkedInfo()}
+    <div class="panel">${g.length? tableGrades(g.slice().reverse(), true) : '<div class="empty">Aucune note.</div>'}</div>
+  `;
+}
+function renderStaffSchedule(){
+  return `
+    <h1 class="page-title">Emploi du temps <button class="btn btn-sm" data-modal="addSchedule">+ Ajouter un cours</button></h1>
+    <p class="page-sub">Vous contrôlez l'emploi du temps de Kim. Cliquez sur la croix pour supprimer un cours.</p>
+    ${linkedInfo()}
+    ${renderScheduleGrid(true)}
+  `;
+}
+function renderStaffHomework(){
+  const h = DATA.homework.filter(x=>x.student===STUDENT_ID);
+  return `
+    <h1 class="page-title">Devoirs <button class="btn btn-sm" data-modal="addHomework">+ Ajouter un devoir</button></h1>
+    ${linkedInfo()}
+    <div class="panel">
+      ${h.length?`<table><thead><tr><th>Matière</th><th>À rendre</th><th>Description</th><th></th></tr></thead><tbody>
+        ${h.slice().reverse().map(x=>`<tr><td><b>${esc(x.subject)}</b></td><td>${fmtDate(x.due)}</td><td>${esc(x.desc)}</td>
+          <td class="t-actions"><button class="icon-btn" data-del="homework" data-id="${x.id}">🗑</button></td></tr>`).join('')}
+      </tbody></table>` : '<div class="empty">Aucun devoir.</div>'}
+    </div>
+  `;
+}
+
+/* ===================== STUDENT VIEWS ===================== */
+function renderStudentHome(){
+  const g = DATA.grades.filter(x=>x.student===STUDENT_ID);
+  const s = DATA.sanctions.filter(x=>x.student===STUDENT_ID);
+  const h = DATA.homework.filter(x=>x.student===STUDENT_ID);
+  return `
+    <h1 class="page-title">Bonjour, Kim 👋</h1>
+    <p class="page-sub">Voici un résumé de ta scolarité.</p>
+    <div class="cards">
+      <div class="stat-card"><div class="stat-icon">📊</div><div><div class="stat-num">${computeAverage(g)}</div><div class="stat-label">Moyenne générale</div></div></div>
+      <div class="stat-card"><div class="stat-icon">📚</div><div><div class="stat-num">${h.length}</div><div class="stat-label">Devoirs à rendre</div></div></div>
+      <div class="stat-card"><div class="stat-icon ${s.length?'red':''}">⚠️</div><div><div class="stat-num">${s.length}</div><div class="stat-label">Sanctions</div></div></div>
+      <div class="stat-card"><div class="stat-icon">✉️</div><div><div class="stat-num">${unreadFor(STUDENT_ID)}</div><div class="stat-label">Messages non lus</div></div></div>
+    </div>
+    <div class="grid-2">
+      <div class="panel"><div class="panel-header"><div class="panel-title">Dernières notes</div></div>
+        ${g.length? tableGrades(g.slice(-5).reverse(), false) : '<div class="empty">Aucune note.</div>'}</div>
+      <div class="panel"><div class="panel-header"><div class="panel-title">Prochains devoirs</div></div>
+        <div class="panel-body"><ul class="item-list">
+          ${h.length? h.slice(0,5).map(x=>`<li><div><div class="item-title">${esc(x.subject)}</div><div class="item-sub">${esc(x.desc)}</div></div><span class="badge badge-blue">${fmtDate(x.due)}</span></li>`).join('') : '<div class="empty">Aucun devoir.</div>'}
+        </ul></div></div>
+    </div>`;
+}
+function renderStudentGrades(){
+  const g = DATA.grades.filter(x=>x.student===STUDENT_ID);
+  return `<h1 class="page-title">Mes notes</h1><p class="page-sub">Moyenne : <b style="color:var(--blue)">${computeAverage(g)}/20</b></p>
+    <div class="panel">${g.length? tableGrades(g.slice().reverse(), false) : '<div class="empty">Aucune note.</div>'}</div>`;
+}
+function renderStudentSchedule(){ return `<h1 class="page-title">Emploi du temps</h1><p class="page-sub">Semaine en cours</p>${renderScheduleGrid(false)}`; }
+function renderStudentHomework(){
+  const h = DATA.homework.filter(x=>x.student===STUDENT_ID);
+  return `<h1 class="page-title">Cahier de textes</h1>
+    <div class="panel"><div class="panel-body">
+      ${h.length?`<ul class="item-list">${h.map(x=>`<li><div><div class="item-title">${esc(x.subject)} — pour le ${fmtDate(x.due)}</div><div class="item-sub">${esc(x.desc)}</div></div><span class="badge badge-blue">À faire</span></li>`).join('')}</ul>`:'<div class="empty">Aucun devoir.</div>'}
+    </div></div>`;
+}
+function renderStudentSanctions(){
+  const s = DATA.sanctions.filter(x=>x.student===STUDENT_ID);
+  return `<h1 class="page-title">Vie scolaire</h1><p class="page-sub">Sanctions et observations</p>
+    <div class="panel">${s.length? tableSanctions(s.slice().reverse(), false) : '<div class="empty">Aucune sanction. Continue comme ça 🎉</div>'}</div>`;
+}
+
+/* ===================== PARENT VIEWS ===================== */
+function renderParentHome(){
+  const g = DATA.grades.filter(x=>x.student===STUDENT_ID);
+  const s = DATA.sanctions.filter(x=>x.student===STUDENT_ID);
+  const h = DATA.homework.filter(x=>x.student===STUDENT_ID);
+  return `
+    <h1 class="page-title">Bonjour, Mme Tang 👋</h1>
+    <p class="page-sub">Suivi de la scolarité de votre enfant : Kim T. (4ème B)</p>
+    <div class="cards">
+      <div class="stat-card"><div class="stat-icon">📊</div><div><div class="stat-num">${computeAverage(g)}</div><div class="stat-label">Moyenne de Kim</div></div></div>
+      <div class="stat-card"><div class="stat-icon ${s.length?'red':'green'}">⚠️</div><div><div class="stat-num">${s.length}</div><div class="stat-label">Sanctions</div></div></div>
+      <div class="stat-card"><div class="stat-icon">📚</div><div><div class="stat-num">${h.length}</div><div class="stat-label">Devoirs à rendre</div></div></div>
+      <div class="stat-card"><div class="stat-icon">✉️</div><div><div class="stat-num">${unreadFor(PARENT_ID)}</div><div class="stat-label">Messages non lus</div></div></div>
+    </div>
+    <div class="grid-2">
+      <div class="panel"><div class="panel-header"><div class="panel-title">Dernières notes</div></div>
+        ${g.length? tableGrades(g.slice(-5).reverse(), false) : '<div class="empty">Aucune note.</div>'}</div>
+      <div class="panel"><div class="panel-header"><div class="panel-title">Prochains devoirs</div></div>
+        <div class="panel-body"><ul class="item-list">
+          ${h.length? h.slice(0,5).map(x=>`<li><div><div class="item-title">${esc(x.subject)}</div><div class="item-sub">${esc(x.desc)}</div></div><span class="badge badge-blue">${fmtDate(x.due)}</span></li>`).join('') : '<div class="empty">Aucun devoir.</div>'}
+        </ul></div></div>
+    </div>`;
+}
+function renderParentGrades(){
+  const g = DATA.grades.filter(x=>x.student===STUDENT_ID);
+  return `<h1 class="page-title">Notes de Kim</h1><p class="page-sub">Moyenne : <b style="color:var(--blue)">${computeAverage(g)}/20</b></p>
+    <div class="panel">${g.length? tableGrades(g.slice().reverse(), false) : '<div class="empty">Aucune note.</div>'}</div>`;
+}
+function renderParentSchedule(){ return `<h1 class="page-title">Emploi du temps de Kim</h1><p class="page-sub">Semaine en cours</p>${renderScheduleGrid(false)}`; }
+function renderParentHomework(){
+  const h = DATA.homework.filter(x=>x.student===STUDENT_ID);
+  return `<h1 class="page-title">Devoirs de Kim</h1>
+    <div class="panel"><div class="panel-body">
+      ${h.length?`<ul class="item-list">${h.map(x=>`<li><div><div class="item-title">${esc(x.subject)} — pour le ${fmtDate(x.due)}</div><div class="item-sub">${esc(x.desc)}</div></div><span class="badge badge-blue">À faire</span></li>`).join('')}</ul>`:'<div class="empty">Aucun devoir.</div>'}
+    </div></div>`;
+}
+function renderParentSanctions(){
+  const s = DATA.sanctions.filter(x=>x.student===STUDENT_ID);
+  return `<h1 class="page-title">Vie scolaire de Kim</h1><p class="page-sub">Sanctions et observations</p>
+    <div class="panel">${s.length? tableSanctions(s.slice().reverse(), false) : '<div class="empty">Aucune sanction.</div>'}</div>`;
+}
+
+/* ===================== MESSAGING ===================== */
+function inboxFor(uid){
+  return DATA.messages.filter(m => m.to.includes(uid)).sort((a,b)=> new Date(b.date)-new Date(a.date));
+}
+function unreadFor(uid){ return inboxFor(uid).filter(m=>!m.read[uid]).length; }
+function isUnread(m){ return !m.read[currentUser.id]; }
+
+function renderMessages(){
+  const inbox = inboxFor(currentUser.id);
+  const canWriteTo = canWriteRecipients();
+  const headerBtn = canWriteTo.length ? `<button class="btn btn-sm" data-modal="newMessage">+ Nouveau message</button>` : '';
+  let listHtml = inbox.length ? inbox.map(m=>{
+    const from = USERS[m.from]?.name || m.from;
+    const unread = isUnread(m);
+    return `<div class="msg-item ${m.id===selectedMsgId?'active':''} ${unread?'unread':''}" data-msg="${m.id}">
+      <div class="msg-top"><div class="msg-from ${unread?'unread':''}">${esc(from)}</div><div class="msg-date">${fmtDateTime(m.date)}</div></div>
+      <div class="msg-subj">${esc(m.subject)}</div>
+      <div class="msg-prev">${esc(m.body.slice(0,80))}</div>
+    </div>`;
+  }).join('') : '<div class="empty">Boîte de réception vide.</div>';
+
+  let right = '';
+  if(selectedMsgId){
+    const msg = DATA.messages.find(x=>x.id===selectedMsgId);
+    if(msg){
+      const fromName = USERS[msg.from]?.name || msg.from;
+      const toNames = msg.to.map(t=>USERS[t]?.name||t).join(', ');
+      const canReply = msg.from !== currentUser.id && (currentUser.role==='staff' || msg.from===STAFF_ID);
+      right = `
+        <div class="msg-view-head">
+          <div class="msg-view-subj">${esc(msg.subject)}</div>
+          <div class="msg-view-meta"><b>De :</b> ${esc(fromName)} &nbsp; · &nbsp; <b>À :</b> ${esc(toNames)}</div>
+          <div class="msg-view-meta">${fmtDateTime(msg.date)}</div>
+        </div>
+        <div class="msg-view-body">${esc(msg.body)}</div>
+        ${canReply? `<div style="margin-top:20px"><button class="btn btn-sm" data-reply="${msg.id}">↩ Répondre</button></div>`:''}
+      `;
+    }
+  } else {
+    right = '<div class="empty">Sélectionnez un message à lire.</div>';
+  }
+
+  return `
+    <h1 class="page-title">Messagerie ${headerBtn}</h1>
+    <p class="page-sub">Vos échanges avec ${currentUser.role==='staff'?'les élèves et parents':'le professeur'}.</p>
+    <div class="msg-layout">
+      <div class="msg-left">
+        <div class="msg-toolbar"><b style="font-size:13px">Boîte de réception</b> <span style="color:var(--muted);font-size:12px">(${inbox.length})</span></div>
+        <div class="msg-list">${listHtml}</div>
+      </div>
+      <div class="msg-right">${right}</div>
+    </div>
+  `;
+}
+function canWriteRecipients(){
+  if(currentUser.role==='staff') return [STUDENT_ID, PARENT_ID];
+  if(currentUser.role==='student') return [STAFF_ID];
+  if(currentUser.role==='parent')  return [STAFF_ID];
+  return [];
+}
+
+/* ===================== ACTIONS / MODALS ===================== */
+function bindActions(){
+  document.querySelectorAll('[data-nav]').forEach(b=>{
+    b.addEventListener('click',()=>{
+      const p = b.dataset.nav;
+      document.querySelectorAll('#sidebar .nav-item').forEach(n=>n.classList.toggle('active', n.dataset.page===p));
+      render(p);
+    });
+  });
+  document.querySelectorAll('[data-modal]').forEach(b=> b.addEventListener('click',()=> openModal(b.dataset.modal)));
+  document.querySelectorAll('[data-del]').forEach(b=>{
+    b.addEventListener('click',()=>{
+      const type = b.dataset.del, id = b.dataset.id;
+      if(confirm('Supprimer cet élément ?')){
+        DATA[type] = DATA[type].filter(x=>x.id!==id);
+        saveData(DATA);
+        const active = document.querySelector('#sidebar .nav-item.active');
+        render(active.dataset.page);
+        toast('Élément supprimé.');
+      }
+    });
+  });
+  document.querySelectorAll('[data-msg]').forEach(b=>{
+    b.addEventListener('click',()=>{
+      selectedMsgId = b.dataset.msg;
+      const m = DATA.messages.find(x=>x.id===selectedMsgId);
+      if(m && !m.read[currentUser.id]){ m.read[currentUser.id] = true; saveData(DATA); }
+      render('messages');
+    });
+  });
+  document.querySelectorAll('[data-reply]').forEach(b=>{
+    b.addEventListener('click',()=> openModal('replyMessage', b.dataset.reply));
+  });
+}
+
+function openModal(type, arg){
+  const mb = document.getElementById('modalBg');
+  const mc = document.getElementById('modalContent');
+  if(type==='addSanction'){
+    mc.innerHTML = `
+      <h3>Nouvelle sanction</h3><p class="sub">Sera visible par Kim et Mme Tang.</p>
+      <div class="form-group"><label>Type</label>
+        <select id="f_type"><option>Avertissement</option><option>Retenue</option><option>Blâme</option><option>Exclusion temporaire</option><option>Observation</option></select></div>
+      <div class="form-group"><label>Motif</label><textarea id="f_reason" rows="3"></textarea></div>
+      <div class="form-group"><label>Date</label><input type="date" id="f_date" value="${today()}"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal()">Annuler</button>
+        <button class="btn btn-danger" onclick="saveSanction()">Enregistrer</button>
+      </div>`;
+  } else if(type==='addGrade'){
+    mc.innerHTML = `
+      <h3>Nouvelle note</h3>
+      <div class="form-group"><label>Matière</label><input id="f_subject"></div>
+      <div class="form-group"><label>Intitulé</label><input id="f_title"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+        <div class="form-group"><label>Note</label><input type="number" id="f_note" min="0" step="0.5" value="15"></div>
+        <div class="form-group"><label>Sur</label><input type="number" id="f_out" min="1" value="20"></div>
+        <div class="form-group"><label>Coef.</label><input type="number" id="f_coef" min="1" value="1"></div>
+      </div>
+      <div class="form-group"><label>Professeur</label><input id="f_teacher" value="M. Tang"></div>
+      <div class="form-group"><label>Date</label><input type="date" id="f_date" value="${today()}"></div>
+      <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Annuler</button>
+        <button class="btn" onclick="saveGrade()">Enregistrer</button></div>`;
+  } else if(type==='addSchedule'){
+    mc.innerHTML = `
+      <h3>Ajouter un cours</h3>
+      <div class="form-group"><label>Matière</label><input id="f_subject"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="form-group"><label>Jour</label><select id="f_day">${DAYS.map((d,i)=>`<option value="${i}">${d}</option>`).join('')}</select></div>
+        <div class="form-group"><label>Créneau</label><select id="f_slot">${SLOTS.map(s=>`<option>${s}</option>`).join('')}</select></div>
+      </div>
+      <div class="form-group"><label>Salle</label><input id="f_room"></div>
+      <div class="form-group"><label>Professeur</label><input id="f_teacher" value="M. Tang"></div>
+      <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Annuler</button>
+        <button class="btn" onclick="saveSchedule()">Ajouter</button></div>`;
+  } else if(type==='addHomework'){
+    mc.innerHTML = `
+      <h3>Ajouter un devoir</h3>
+      <div class="form-group"><label>Matière</label><input id="f_subject"></div>
+      <div class="form-group"><label>Description</label><textarea id="f_desc" rows="3"></textarea></div>
+      <div class="form-group"><label>À rendre le</label><input type="date" id="f_due" value="${today()}"></div>
+      <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Annuler</button>
+        <button class="btn" onclick="saveHomework()">Ajouter</button></div>`;
+  } else if(type==='newMessage'){
+    const rec = canWriteRecipients();
+    const opts = rec.map(r=>`<option value="${r}">${USERS[r].name} — ${USERS[r].roleLabel}</option>`).join('');
+    const multiple = currentUser.role==='staff' ? 'multiple size="3"' : '';
+    const hint = currentUser.role==='staff' ? '<p class="sub">Maintenez Ctrl/Cmd pour sélectionner plusieurs destinataires.</p>':'';
+    mc.innerHTML = `
+      <h3>Nouveau message</h3>${hint}
+      <div class="form-group"><label>Destinataire(s)</label><select id="f_to" ${multiple}>${opts}</select></div>
+      <div class="form-group"><label>Objet</label><input id="f_subject"></div>
+      <div class="form-group"><label>Message</label><textarea id="f_body" rows="6"></textarea></div>
+      <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Annuler</button>
+        <button class="btn" onclick="sendMessage()">Envoyer</button></div>`;
+  } else if(type==='replyMessage'){
+    const orig = DATA.messages.find(x=>x.id===arg);
+    if(!orig) return;
+    const to = orig.from;
+    mc.innerHTML = `
+      <h3>Répondre</h3><p class="sub">À : ${esc(USERS[to].name)}</p>
+      <input type="hidden" id="f_to_single" value="${to}">
+      <div class="form-group"><label>Objet</label><input id="f_subject" value="Re: ${esc(orig.subject)}"></div>
+      <div class="form-group"><label>Message</label><textarea id="f_body" rows="6"></textarea></div>
+      <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Annuler</button>
+        <button class="btn" onclick="sendReply()">Envoyer</button></div>`;
+  }
+  mb.classList.add('active');
+}
+function closeModal(){ document.getElementById('modalBg').classList.remove('active'); }
+
+function saveSanction(){
+  const type=document.getElementById('f_type').value;
+  const reason=document.getElementById('f_reason').value.trim();
+  const date=document.getElementById('f_date').value;
+  if(!reason){ alert('Motif requis.'); return; }
+  DATA.sanctions.push({id:uid(),student:STUDENT_ID,date,type,reason,staff:currentUser.name,status:'Notifiée'});
+  saveData(DATA); closeModal(); render('staffSanctions'); toast('Sanction enregistrée.');
+}
+function saveGrade(){
+  const subject=document.getElementById('f_subject').value.trim();
+  const title=document.getElementById('f_title').value.trim();
+  const note=parseFloat(document.getElementById('f_note').value);
+  const out=parseFloat(document.getElementById('f_out').value);
+  const coef=parseFloat(document.getElementById('f_coef').value);
+  const teacher=document.getElementById('f_teacher').value.trim();
+  const date=document.getElementById('f_date').value;
+  if(!subject||!title||isNaN(note)){ alert('Champs manquants.'); return; }
+  DATA.grades.push({id:uid(),student:STUDENT_ID,subject,title,note,out,coef,teacher,date});
+  saveData(DATA); closeModal(); render('staffGrades'); toast('Note ajoutée.');
+}
+function saveSchedule(){
+  const subject=document.getElementById('f_subject').value.trim();
+  const day=parseInt(document.getElementById('f_day').value);
+  const slot=document.getElementById('f_slot').value;
+  const room=document.getElementById('f_room').value.trim();
+  const teacher=document.getElementById('f_teacher').value.trim();
+  if(!subject){ alert('Matière requise.'); return; }
+  DATA.schedule.push({id:uid(),student:STUDENT_ID,day,slot,subject,room,teacher});
+  saveData(DATA); closeModal(); render('staffSchedule'); toast('Cours ajouté.');
+}
+function saveHomework(){
+  const subject=document.getElementById('f_subject').value.trim();
+  const desc=document.getElementById('f_desc').value.trim();
+  const due=document.getElementById('f_due').value;
+  if(!subject||!desc){ alert('Champs manquants.'); return; }
+  DATA.homework.push({id:uid(),student:STUDENT_ID,subject,desc,due});
+  saveData(DATA); closeModal(); render('staffHomework'); toast('Devoir ajouté.');
+}
+function sendMessage(){
+  const sel = document.getElementById('f_to');
+  const to = Array.from(sel.selectedOptions).map(o=>o.value);
+  const subject = document.getElementById('f_subject').value.trim();
+  const body = document.getElementById('f_body').value.trim();
+  if(!to.length || !subject || !body){ alert('Champs manquants.'); return; }
+  DATA.messages.push({id:uid(),from:currentUser.id,to,subject,body,date:new Date().toISOString(),read:{[currentUser.id]:true}});
+  saveData(DATA); closeModal(); selectedMsgId=null; render('messages'); toast('Message envoyé.');
+}
+function sendReply(){
+  const to = [document.getElementById('f_to_single').value];
+  const subject = document.getElementById('f_subject').value.trim();
+  const body = document.getElementById('f_body').value.trim();
+  if(!subject || !body){ alert('Champs manquants.'); return; }
+  DATA.messages.push({id:uid(),from:currentUser.id,to,subject,body,date:new Date().toISOString(),read:{[currentUser.id]:true}});
+  saveData(DATA); closeModal(); render('messages'); toast('Réponse envoyée.');
+}
+
+/* ===================== UTILS ===================== */
+function esc(s){ return (s||'').toString().replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function fmtDate(d){ if(!d) return ''; const [y,m,da]=d.split('-'); return `${da}/${m}/${y}`; }
+function fmtDateTime(iso){
+  try{ const d=new Date(iso); return d.toLocaleDateString('fr-FR')+' · '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});}catch(e){return iso;}
+}
+function today(){ return new Date().toISOString().slice(0,10); }
+function updateBell(){
+  if(!currentUser) return;
+  const n = unreadFor(currentUser.id);
+  const b = document.getElementById('bellCount');
+  b.textContent = n;
+  b.classList.toggle('show', n>0);
+  const nb = document.getElementById('navMsgBadge');
+  if(nb){ nb.textContent = n>0 ? n : ''; nb.style.display = n>0?'inline-block':'none'; }
+}
+let toastT;
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(()=>t.classList.remove('show'), 2200);
+  updateBell();
+}
+window.addEventListener('storage',(e)=>{
+  if(e.key===STORE_KEY){
+    DATA = loadData();
+    if(currentUser){
+      const active = document.querySelector('#sidebar .nav-item.active');
+      if(active) render(active.dataset.page);
+      updateBell();
+    }
+  }
+});
+document.getElementById('modalBg').addEventListener('click',e=>{ if(e.target.id==='modalBg') closeModal(); });
+</script>
+</body>
+</html>
